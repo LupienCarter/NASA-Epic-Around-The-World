@@ -17,11 +17,14 @@ and images links.
 3. Enter a date (YYYY-MM-DD) or  press Enter for the default.
 
 ## Program design
-1. 'get_photos(date)' : retrieves data from the API.
-2. 'get_region(longitude)' : classifies a longitude into a region.
-3. 'build_image_link(photo)' : builds the image URL from the date and image name.
-4. 'count_regions(photos)' : builds a dictionary of photo counts per region.
-5. 'print_results(...)' : formats and displays the output.
+1. 'retrieve_epic_photos(date, api_key)': requests one date's photos and
+returns a list of dictionaries, or an empty list on a non-200 status
+code or no photos
+2. 'label_region(longitude)': turns one longitude into a region name
+3. 'count_photos_by_region(photos)': returns a dictionary of photo counts
+per region
+4. 'display_region_report(date, api_key)': checks for an empty list, then
+prints the counts, a timeline with image links, and the busiest region
 
 ## API Key
 The code uses 'DEMO_KEY' . For heavier use, get a free key at 
