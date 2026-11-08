@@ -1,34 +1,26 @@
 import requests
 
-API_KEY = "DEMO_KEY"
-BASE_URL = "https://api.nasa.gov/EPIC"
 DEFAULT_DATE = "2016-03-08"
 
 
-def get_photos(date):
-    """Request one date's photos. Returns a list, or None if the request failed."""
-    url = f"{BASE_URL}/api/natural/date/{date}"
+def retrieve_epic_photos(date, api_key):
+    """Request one date's photos. Returns a list of dicts, or [] on any problem."""
+    url = f"https://api.nasa.gov/EPIC/api/natural/date/{date}"
     try:
-        response = requests.get(url, params={"api_key": API_KEY}, timeout=10)
+        response = requests.get(url, params={"api_key": api_key}, timeout=10)
     except requests.RequestException:
         print("Could not reach the EPIC API. Check your internet connection.")
-        return None
+        return []
 
-    if response.status_code == 403:
-        print("Error 403: the API key is missing or invalid.")
-        return None
-    if response.status_code == 429:
-        print("Error 429: rate limit reached. Try again later or use your own key.")
-        return None
     if response.status_code != 200:
-        print(f"Unexpected error: status code {response.status_code}.")
-        return None
+        print(f"Request failed with status code {response.status_code}.")
+        return []
 
     return response.json()
 
 
-def get_region(longitude):
-    """Label which part of Earth faces the camera, based on longitude."""
+def label_region(longitude):
+    """Return which part of Earth faces the camera for this longitude."""
     if -120 <= longitude < -30:
         return "Americas"
     elif -30 <= longitude < 60:
@@ -39,53 +31,45 @@ def get_region(longitude):
         return "Pacific"
 
 
-def build_image_link(photo):
-    """Build the image URL from the photo's date and image name."""
-    year, month, day = photo["date"].split(" ")[0].split("-")
-    return f"{BASE_URL}/archive/natural/{year}/{month}/{day}/png/{photo['image']}.png?api_key={API_KEY}"
-
-
-def count_regions(photos):
-    """Return a dictionary of how many photos fall in each region."""
+def count_photos_by_region(photos):
+    """Return a dict of how many photos fall in each region."""
     counts = {}
     for photo in photos:
-        region = get_region(photo["centroid_coordinates"]["lon"])
+        region = label_region(photo["centroid_coordinates"]["lon"])
         counts[region] = counts.get(region, 0) + 1
     return counts
 
 
-def print_results(date, photos, counts):
-    """Print the counts, a timeline, and the most photographed region."""
-    print(f"\nEPIC took {len(photos)} photos on {date}.\n")
+def display_region_report(date, api_key):
+    """Retrieve photos, count them by region, and print the report."""
+    photos = retrieve_epic_photos(date, api_key)
+    if not photos:
+        print(f"No EPIC photos available for {date}.")
+        return
 
+    counts = count_photos_by_region(photos)
+
+    print(f"\nEPIC took {len(photos)} photos on {date}.\n")
     print("Photos per region:")
     for region, count in counts.items():
         print(f"  {region}: {count}")
 
     print("\nTimeline:")
+    year, month, day = date.split("-")
     for photo in photos:
         time = photo["date"].split(" ")[1]
-        region = get_region(photo["centroid_coordinates"]["lon"])
-        print(f"  {time}  {region:<18} {build_image_link(photo)}")
+        region = label_region(photo["centroid_coordinates"]["lon"])
+        link = (f"https://api.nasa.gov/EPIC/archive/natural/{year}/{month}/{day}"
+                f"/png/{photo['image']}.png?api_key={api_key}")
+        print(f"  {time}  {region:<18} {link}")
 
     busiest = max(counts, key=counts.get)
     print(f"\nMost photographed region: {busiest}")
 
 
-def main():
-    date = input(f"Enter a date (YYYY-MM-DD) or press Enter for {DEFAULT_DATE}: ").strip()
-    if date == "":
-        date = DEFAULT_DATE
-
-    photos = get_photos(date)
-    if photos is None:
-        return
-    if len(photos) == 0:
-        print(f"No EPIC photos for {date}. Try a date after June 2015.")
-        return
-
-    counts = count_regions(photos)
-    print_results(date, photos, counts)
-
-
-main()
+# Main program
+api_key = "DEMO_KEY"
+date = input(f"Enter a date (YYYY-MM-DD) or press Enter for {DEFAULT_DATE}: ").strip()
+if date == "":
+    date = DEFAULT_DATE
+display_region_report(date, api_key)
