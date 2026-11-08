@@ -38,4 +38,5 @@ This diagram shows how the program is broken into functions. 'Main()' collects t
 , the calls 'get_photos()' to retrieve data from the API. The photos are passed to 
 'count_regions()', which uses 'get_regions()' to label each photo, and finally 'print_results()' displays
 the output, using 'build_image_links()' for each photo's link.
-<img width="960" height="720" alt="Around the world_" src="https://github.com/user-attachments/assets/b5d63188-0fc7-4876-a638-8f6a03853eff" />
+<img width="960" height="720" alt="Around the world_ (1)" src="https://github.com/user-attachments/assets/200ec9be-2051-4adb-8d5d-c543d726a7bc" />
+
